@@ -1,0 +1,134 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Responder Pregunta{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <h1>{{ pregunta.texto }}</h1>
+
+        <!-- Si la pregunta ya ha sido respondida, mostramos un mensaje -->
+        {% if yaRespondida %}
+            <div class="alert alert-info">
+                Ya has respondido esta pregunta.
+            </div>
+
+            <!-- Botón para volver al inicio -->
+            <a href="{{ path('app_home') }}" class="btn btn-secondary mb-3">Volver al inicio</a>
+        {% else %}
+            <form method="post">
+                <div class="form-group">
+                    <label for="respuesta">Selecciona una respuesta:</label><br>
+                    
+                    <!-- Solo mostrar las respuestas si están definidas -->
+                    {% if pregunta.respuesta1 %}
+                        <input type="radio" id="respuesta1" name="respuesta" value="1" required> {{ pregunta.respuesta1 }}
+                    {% endif %}
+                    {% if pregunta.respuesta2 %}
+                        <input type="radio" id="respuesta2" name="respuesta" value="2" required> {{ pregunta.respuesta2 }}
+                    {% endif %}
+                    {% if pregunta.respuesta3 %}
+                        <input type="radio" id="respuesta3" name="respuesta" value="3" required> {{ pregunta.respuesta3 }}
+                    {% endif %}
+                    {% if pregunta.respuesta4 %}
+                        <input type="radio" id="respuesta4" name="respuesta" value="4" required> {{ pregunta.respuesta4 }}
+                    {% endif %}
+                </div>
+                <button type="submit" class="btn btn-primary">Responder</button>
+            </form>
+        {% endif %}
+
+        <!-- Contenedor del gráfico -->
+        <h3>Respuestas a esta pregunta</h3>
+        <div style="max-width: 600px; margin: 0 auto;">
+            <canvas id="respuestasChart" width="400" height="250"></canvas>  <!-- Gráfico más pequeño -->
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            // Obtener el ID de la pregunta
+            const preguntaId = {{ pregunta.id }};
+            
+            // Inicializar el gráfico con etiquetas vacías
+            const ctx = document.getElementById('respuestasChart').getContext('2d');
+            const respuestasChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [],  // Las etiquetas se llenarán dinámicamente
+                    datasets: [{
+                        label: 'Cantidad de Respuestas',
+                        data: [],  // Los datos se llenarán dinámicamente
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Función para actualizar el gráfico con los datos
+            function actualizarGrafico() {
+                fetch(`/pregunta/${preguntaId}/respuestas/data`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Obtener las respuestas no vacías de la entidad pregunta
+                        const respuestas = {
+                            respuesta1: '{{ pregunta.respuesta1 }}',
+                            respuesta2: '{{ pregunta.respuesta2 }}',
+                            respuesta3: '{{ pregunta.respuesta3 }}',
+                            respuesta4: '{{ pregunta.respuesta4 }}'
+                        };
+
+                        // Filtrar las respuestas no vacías
+                        const labels = [];
+                        const dataValues = [];
+                        for (let i = 1; i <= 4; i++) {
+                            const respuestaTexto = respuestas['respuesta' + i];
+                            if (respuestaTexto) {
+                                // Solo incluir respuestas no vacías
+                                labels.push('Respuesta ' + i);
+                                dataValues.push(data.respuestas['respuesta' + i] || 0);  // Usar 0 si no hay respuestas
+                            }
+                        }
+
+                        // Actualizar los datos y etiquetas del gráfico
+                        respuestasChart.data.labels = labels;
+                        respuestasChart.data.datasets[0].data = dataValues;
+                        respuestasChart.update(); // Redibujar el gráfico con nuevos datos
+                    })
+                    .catch(error => console.error('Error al obtener los datos:', error));
+            }
+
+            // Llamar a la función para cargar los datos cuando se carga la página
+            actualizarGrafico();
+
+            // Configurar la actualización automática cada 5 segundos
+            setInterval(actualizarGrafico, 5000);
+        </script>
+
+        <!-- Mostrar respuestas si ya fue respondida -->
+        {% if yaRespondida %}
+            <h4>Respuestas de los usuarios:</h4>
+            <ul>
+                {% if pregunta.respuesta1 %}
+                    <li>Respuesta 1: {{ pregunta.respuesta1 }}</li>
+                {% endif %}
+                {% if pregunta.respuesta2 %}
+                    <li>Respuesta 2: {{ pregunta.respuesta2 }}</li>
+                {% endif %}
+                {% if pregunta.respuesta3 %}
+                    <li>Respuesta 3: {{ pregunta.respuesta3 }}</li>
+                {% endif %}
+                {% if pregunta.respuesta4 %}
+                    <li>Respuesta 4: {{ pregunta.respuesta4 }}</li>
+                {% endif %}
+            </ul>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -1,0 +1,150 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Detalle de la Pregunta</h1>
+    <p><strong>Enunciado:</strong> {{ pregunta.texto }}</p>
+    <p><strong>Respuestas:</strong></p>
+    <ul>
+        {% if pregunta.respuesta1 %}
+            <li>1. {{ pregunta.respuesta1 }}</li>
+        {% endif %}
+        {% if pregunta.respuesta2 %}
+            <li>2. {{ pregunta.respuesta2 }}</li>
+        {% endif %}
+        {% if pregunta.respuesta3 %}
+            <li>3. {{ pregunta.respuesta3 }}</li>
+        {% endif %}
+        {% if pregunta.respuesta4 %}
+            <li>4. {{ pregunta.respuesta4 }}</li>
+        {% endif %}
+    </ul>
+    <p><strong>Solución:</strong> {{ pregunta.solucion }}</p>
+
+    <p><strong>Fecha de inicio:</strong> {{ pregunta.fechaInicio|date('d/m/Y') }}</p>
+    <p><strong>Fecha de fin:</strong> {{ pregunta.fechaFin|date('d/m/Y') }}</p>
+
+    <h3>Usuarios que han respondido:</h3>
+    <ul>
+        {% for respuesta in respuestas %}
+            <li>
+                Usuario: {{ respuesta.usuario.email }} - 
+                {% if respuesta.respuestaId == 1 %}
+                    Respuesta: {{ pregunta.respuesta1 }}
+                {% elseif respuesta.respuestaId == 2 %}
+                    Respuesta: {{ pregunta.respuesta2 }}
+                {% elseif respuesta.respuestaId == 3 %}
+                    Respuesta: {{ pregunta.respuesta3 }}
+                {% elseif respuesta.respuestaId == 4 %}
+                    Respuesta: {{ pregunta.respuesta4 }}
+                {% else %}
+                    Respuesta no válida
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+
+    <!-- Botón para generar PDF -->
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="{{ path('pregunta_pdf', {'id': pregunta.id}) }}" class="btn btn-primary">Generar PDF</a>
+    </div>
+
+    <!-- Contenedor del gráfico -->
+    <h3>Distribución de Respuestas</h3>
+    <div style="max-width: 600px; margin: 0 auto;">
+        <canvas id="respuestasChart" width="400" height="250"></canvas>  <!-- Gráfico más pequeño -->
+    </div>
+
+    <!-- Mensaje de carga (oculto por defecto) -->
+    <div id="loadingMessage" style="text-align: center; display: none;">
+        Cargando datos del gráfico...
+    </div>
+
+    <a href="{{ path('app_home') }}" class="btn btn-secondary">Volver</a>
+{% endblock %}
+{% block javascripts %}
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        window.onload = function() {
+            // Obtener el ID de la pregunta
+            const preguntaId = {{ pregunta.id }};
+            
+            // Inicializar el gráfico con etiquetas vacías
+            const ctx = document.getElementById('respuestasChart').getContext('2d');
+            const respuestasChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [],  // Las etiquetas se llenarán dinámicamente
+                    datasets: [{
+                        label: 'Cantidad de Respuestas',
+                        data: [],  // Los datos se llenarán dinámicamente
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Función para actualizar el gráfico con los datos
+            function actualizarGrafico() {
+                // Mostrar el gráfico si no se muestra
+                const loadingMessage = document.getElementById('loadingMessage');
+                loadingMessage.style.display = 'block';  // Mostrar mensaje de carga
+
+                fetch(`/pregunta/${preguntaId}/respuestas/data`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Ocultar el mensaje de carga
+                        loadingMessage.style.display = 'none';
+
+                        // Obtener las respuestas no vacías de la entidad pregunta
+                        const respuestas = {
+                            respuesta1: '{{ pregunta.respuesta1 }}',
+                            respuesta2: '{{ pregunta.respuesta2 }}',
+                            respuesta3: '{{ pregunta.respuesta3 }}',
+                            respuesta4: '{{ pregunta.respuesta4 }}'
+                        };
+
+                        // Filtrar las respuestas no vacías
+                        const labels = [];
+                        const dataValues = [];
+                        for (let i = 1; i <= 4; i++) {
+                            const respuestaTexto = respuestas['respuesta' + i];
+                            if (respuestaTexto) {
+                                // Solo incluir respuestas no vacías
+                                labels.push('Respuesta ' + i);
+                                dataValues.push(data.respuestas['respuesta' + i] || 0);  // Usar 0 si no hay respuestas
+                            }
+                        }
+
+                        // Verificar si ya existe el gráfico antes de actualizarlo
+                        if (respuestasChart) {
+                            // Actualizar los datos y etiquetas del gráfico
+                            respuestasChart.data.labels = labels;
+                            respuestasChart.data.datasets[0].data = dataValues;
+                            respuestasChart.update(); // Redibujar el gráfico con nuevos datos
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al obtener los datos:', error);
+                        // Ocultar mensaje de carga si hay un error
+                        loadingMessage.style.display = 'none';
+                    });
+            }
+
+            // Llamar a la función para cargar los datos cuando se carga la página
+            actualizarGrafico();
+
+            // Configurar la actualización automática cada 5 segundos
+            setInterval(actualizarGrafico, 5000);
+        }
+    </script>
+{% endblock %}

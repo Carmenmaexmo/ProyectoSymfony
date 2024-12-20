@@ -1,0 +1,108 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mt-5">
+    <!-- Título dinámico -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold text-primary">{{ form.vars.value.id ? 'Editar Pregunta' : 'Nueva Pregunta' }}</h1>
+        <p class="lead text-muted">
+            {{ form.vars.value.id ? 'Modifica los datos de la pregunta seleccionada.' : 'Crea una nueva pregunta para tus encuestas.' }}
+        </p>
+    </div>
+
+    <!-- Mensaje Flash -->
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert" style="background-color: #28a745; color: white;">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    <!-- Formulario estilizado -->
+    <div class="card shadow-lg border-0 p-4">
+        {{ form_start(form) }}
+            <div class="row g-4">
+                <!-- Texto de la pregunta -->
+                <div class="col-md-12">
+                    <div class="form-floating">
+                        {{ form_widget(form.texto, {'attr': {'class': 'form-control shadow-sm', 'placeholder': 'Escribe el texto de la pregunta'}}) }}
+                        {{ form_label(form.texto, 'Texto de la Pregunta', {'label_attr': {'class': 'form-label'}}) }}
+                        {{ form_errors(form.texto) }}
+                    </div>
+                </div>
+
+                <!-- Fechas -->
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        {{ form_widget(form.fechaInicio, {'attr': {'class': 'form-control shadow-sm', 'placeholder': 'Fecha de inicio'}}) }}
+                        {{ form_label(form.fechaInicio, 'Fecha de Inicio') }}
+                        {{ form_errors(form.fechaInicio) }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        {{ form_widget(form.fechaFin, {'attr': {'class': 'form-control shadow-sm', 'placeholder': 'Fecha de fin'}}) }}
+                        {{ form_label(form.fechaFin, 'Fecha de Fin') }}
+                        {{ form_errors(form.fechaFin) }}
+                    </div>
+                </div>
+
+                <!-- Respuestas -->
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        {{ form_widget(form.respuesta1, {'attr': {'class': 'form-control shadow-sm', 'placeholder': 'Respuesta 1'}}) }}
+                        {{ form_label(form.respuesta1, 'Respuesta 1') }}
+                        {{ form_errors(form.respuesta1) }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        {{ form_widget(form.respuesta2, {'attr': {'class': 'form-control shadow-sm', 'placeholder': 'Respuesta 2'}}) }}
+                        {{ form_label(form.respuesta2, 'Respuesta 2') }}
+                        {{ form_errors(form.respuesta2) }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        {{ form_widget(form.respuesta3, {'attr': {'class': 'form-control shadow-sm', 'placeholder': 'Respuesta 3'}}) }}
+                        {{ form_label(form.respuesta3, 'Respuesta 3') }}
+                        {{ form_errors(form.respuesta3) }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        {{ form_widget(form.respuesta4, {'attr': {'class': 'form-control shadow-sm', 'placeholder': 'Respuesta 4'}}) }}
+                        {{ form_label(form.respuesta4, 'Respuesta 4') }}
+                        {{ form_errors(form.respuesta4) }}
+                    </div>
+                </div>
+
+                <!-- Solución -->
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        {{ form_widget(form.solucion, {'attr': {'class': 'form-control shadow-sm', 'placeholder': 'Número de la solución', 'id': 'solucion'}}) }}
+                        {{ form_label(form.solucion, 'Solución (Número)') }}
+                        {{ form_errors(form.solucion) }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="mt-4 d-flex justify-content-between">
+                <button class="btn btn-primary btn-lg px-5 shadow" type="submit">
+                    <i class="fas fa-save"></i> {{ form.vars.value.id ? 'Actualizar' : 'Crear' }}
+                </button>
+                <a href="{{ path('app_home') }}" class="btn btn-secondary btn-lg px-5 shadow">
+                    <i class="fas fa-arrow-left"></i> Volver al inicio
+                </a>
+            </div>
+        {{ form_end(form) }}
+    </div>
+</div>
+
+{% endblock %}

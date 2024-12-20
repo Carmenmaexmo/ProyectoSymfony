@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Preguntas Activas{% endblock %}
+
+{% block body %}
+<h1>Preguntas Activas</h1>
+
+{% if preguntas is empty %}
+    <p>No hay preguntas activas en este momento.</p>
+{% else %}
+    <ul>
+        {% for pregunta in preguntas %}
+            <li>
+                <strong>{{ pregunta.texto }}</strong><br>
+                <a href="{{ path('app_responder_pregunta', {id: pregunta.id}) }}" class="btn btn-primary">Responder</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}
+{% endblock %}

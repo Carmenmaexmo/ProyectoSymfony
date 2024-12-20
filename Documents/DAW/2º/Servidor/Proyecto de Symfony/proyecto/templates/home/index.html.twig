@@ -1,0 +1,117 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="container mt-5">
+        {# Si no hay preguntas activas, mostrar mensaje correspondiente #}
+        {% if noHayPreguntasActivas %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <strong>¡Atención!</strong> No hay preguntas activas en este momento.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% else %}
+            {# Título que cambia si es Admin o no #}
+            <h2 class="text-center mb-4">
+                {% if esAdmin %}
+                    Preguntas:
+                {% else %}
+                    Preguntas Activas:
+                {% endif %}
+            </h2>
+
+            {# Si es Admin, mostrar botón para crear nueva pregunta #}
+            {% if esAdmin %}
+                <div class="text-center mb-4">
+                    <a href="{{ path('app_pregunta_new') }}" class="btn btn-primary">Crear Pregunta</a>
+                </div>
+            {% endif %}
+        </div{% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ type }}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Enunciado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pregunta in preguntas %}
+                            <tr>
+                                <td>{{ pregunta.texto }}</td>
+                                <td>
+                                    {% if esAdmin %}
+                                        <a href="{{ path('app_pregunta_show', { id: pregunta.id }) }}" class="btn btn-info btn-sm">Ver</a>
+                                        <a href="{{ path('app_pregunta_edit', { id: pregunta.id }) }}" class="btn btn-warning btn-sm">Editar</a>
+                                        <form method="post" action="{{ path('app_pregunta_delete', { id: pregunta.id }) }}" style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar esta pregunta?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ pregunta.id) }}">
+                                            <button class="btn btn-danger btn-sm">Eliminar</button>
+                                        </form>
+                                    {% else %}
+                                        <a href="{{ path('app_responder_pregunta', { id: pregunta.id }) }}" class="btn btn-success btn-sm">Responder</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="2" class="text-center">No hay preguntas disponibles.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        {# Mostrar enlace para ver historial de respuestas solo si el usuario no es admin #}
+        {% if not esAdmin %}
+            <div class="mt-4 text-center">
+                <a href="{{ path('app_respuestas_anteriores') }}" class="btn btn-secondary">Ver historial de respuestas</a>
+            </div>
+        {% endif %}
+
+        {# Enlace para cerrar sesión #}
+        <div class="mt-4 text-center">
+            <a href="{{ path('app_logout') }}" class="btn btn-danger">Cerrar sesión</a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 1000px;
+            margin-top: 50px;
+        }
+        .table {
+            background-color: white;
+            border-radius: 5px;
+        }
+        .table th, .table td {
+            vertical-align: middle;
+        }
+        .table-bordered {
+            border: 1px solid #dee2e6;
+        }
+        .table-striped tbody tr:nth-child(odd) {
+            background-color: #f2f2f2;
+        }
+        .btn {
+            font-size: 14px;
+            padding: 5px 10px;
+        }
+        .btn-info, .btn-warning, .btn-danger, .btn-success, .btn-secondary {
+            font-size: 14px;
+        }
+    </style>
+{% endblock %}
+{% block javascripts %}{% endblock %}
+
